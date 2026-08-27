@@ -1,0 +1,10 @@
+text,sentiment,clean_text
+I absolutely loved this product. The quality is amazing!,positive,i absolutely loved this product the quality is amazing
+The product works perfectly and I am very happy with it.,positive,the product works perfectly and i am very happy with it
+Excellent experience. I would definitely recommend it.,positive,excellent experience i would definitely recommend it
+"The quality is okay, but nothing special.",neutral,the quality is okay but nothing special
+It is an average product for the price.,neutral,it is an average product for the price
+I don't have strong feelings about this product.,neutral,i dont have strong feelings about this product
+I am very disappointed with this product.,negative,i am very disappointed with this product
+The quality is terrible and it stopped working quickly.,negative,the quality is terrible and it stopped working quickly
+I regret buying this. It was a waste of money.,negative,i regret buying this it was a waste of money

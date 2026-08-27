@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RAG Sentiment Analysis</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            font-size: 16px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #3730a3;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+        textarea {
+    width: 100%;
+    height: 100px;
+    padding: 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 12px 30px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.summary {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.review-card {
+    margin-top: 15px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.review-card h3 {
+    margin-top: 0;
+}
+
+.positive {
+    color: green;
+}
+
+.negative {
+    color: red;
+}
+
+.neutral {
+    color: #d69e00;
+}
+
+.review-card small {
+    color: #666;
+}
+.sentiment-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.sentiment-stats div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sentiment-stats strong {
+    font-size: 28px;
+}
+
+.sentiment-stats span {
+    font-weight: bold;
+}
+
+.sentiment-stats small {
+    color: #666;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>RAG Sentiment Analysis</h1>
+
+    <textarea id="query" placeholder="What do customers think about this product?"></textarea>
+
+    <button onclick="analyze()">Analyze</button>
+
+    <div id="loading"></div>
+
+    <div id="summary"></div>
+
+    <div id="results"></div>
+
+</div>
+
+<script>
+
+async function analyze() {
+
+    const query = document.getElementById("query").value;
+
+    if (!query.trim()) {
+        alert("Please enter a question.");
+        return;
+    }
+
+    document.getElementById("loading").innerHTML = "Analyzing...";
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("summary").innerHTML = "";
+
+    try {
+
+        const response = await fetch("/analyze", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                query: query
+            })
+        });
+
+        const data = await response.json();
+
+        document.getElementById("loading").innerHTML = "";
+
+        if (data.error) {
+            document.getElementById("results").innerHTML =
+                `<p>${data.error}</p>`;
+            return;
+        }
+
+        const results = data.results;
+
+        let positive = 0;
+        let negative = 0;
+        let neutral = 0;
+
+        results.forEach(item => {
+
+            if (item.sentiment === "positive") {
+                positive++;
+            } else if (item.sentiment === "negative") {
+                negative++;
+            } else {
+                neutral++;
+            }
+
+        });
+        const total = results.length;
+
+const positivePercent = ((positive / total) * 100).toFixed(1);
+const negativePercent = ((negative / total) * 100).toFixed(1);
+const neutralPercent = ((neutral / total) * 100).toFixed(1);
+
+let overallSentiment;
+
+if (positive >= negative && positive >= neutral) {
+    overallSentiment = "Positive";
+} else if (negative >= positive && negative >= neutral) {
+    overallSentiment = "Negative";
+} else {
+    overallSentiment = "Neutral";
+}
+
+        document.getElementById("summary").innerHTML = `
+    <div class="summary">
+        <h2>Overall Sentiment: ${overallSentiment}</h2>
+
+        <div class="sentiment-stats">
+            <div>
+                <strong class="positive">${positive}</strong>
+                <span>Positive</span>
+                <small>${positivePercent}%</small>
+            </div>
+
+            <div>
+                <strong class="negative">${negative}</strong>
+                <span>Negative</span>
+                <small>${negativePercent}%</small>
+            </div>
+
+            <div>
+                <strong class="neutral">${neutral}</strong>
+                <span>Neutral</span>
+                <small>${neutralPercent}%</small>
+            </div>
+        </div>
+    </div>
+`;
+
+        results.forEach(item => {
+
+            const card = document.createElement("div");
+            card.className = "review-card";
+
+            card.innerHTML = `
+                <h3 class="${item.sentiment}">
+                    ${item.sentiment.toUpperCase()}
+                </h3>
+
+                <p>${item.review}</p>
+
+                <small>
+                    Similarity Score: ${item.score.toFixed(4)}
+                </small>
+            `;
+
+            document.getElementById("results").appendChild(card);
+
+        });
+
+    } catch (error) {
+
+        document.getElementById("loading").innerHTML = "";
+
+        document.getElementById("results").innerHTML =
+            "<p>Something went wrong. Please try again.</p>";
+
+        console.error(error);
+    }
+}
+
+</script>
+
+</body>
